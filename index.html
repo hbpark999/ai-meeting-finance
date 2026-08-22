@@ -22,6 +22,12 @@
     input[type="number"] {
       -moz-appearance: textfield;
     }
+    .quick-btn.active {
+      border-color: #2563eb;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800">
@@ -30,15 +36,11 @@
       <div>
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200">EMC Society AI Study Group</p>
         <h1 class="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">전자파학회 전자파 AI 연구반 교육행사 비용 시뮬레이터</h1>
-        <p class="mt-1 text-sm text-indigo-100">1일차 / 2일차 참가비, 운영비, 학회 수수료 15%를 자동 계산합니다.</p>
+        <p class="mt-1 text-sm text-indigo-100">참가비, 인원, 식비를 빠르게 선택하거나 직접 입력해 예산을 계산합니다.</p>
       </div>
       <div class="flex gap-2">
-        <button type="button" onclick="resetAllInputs()" class="rounded-md bg-indigo-800 px-3 py-2 text-xs font-semibold text-indigo-50 transition hover:bg-indigo-700">
-          초기화
-        </button>
-        <button type="button" onclick="copySummaryToClipboard()" class="rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500">
-          요약 복사
-        </button>
+        <button type="button" onclick="resetAllInputs()" class="rounded-md bg-indigo-800 px-3 py-2 text-xs font-semibold text-indigo-50 transition hover:bg-indigo-700">초기화</button>
+        <button type="button" onclick="copySummaryToClipboard()" class="rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500">요약 복사</button>
       </div>
     </div>
   </header>
@@ -49,8 +51,8 @@
         <p class="text-xs font-bold uppercase tracking-wide text-slate-500">총 매출</p>
         <p id="stat-total-revenue" class="mt-2 text-2xl font-extrabold text-blue-600">0 원</p>
         <p class="mt-3 flex justify-between text-xs text-slate-500">
-          <span>1일차 <b id="stat-d1-rev" class="text-slate-700">0원</b></span>
-          <span>2일차 <b id="stat-d2-rev" class="text-slate-700">0원</b></span>
+          <span>1일차 <b id="stat-d1-rev" class="text-slate-700">0 원</b></span>
+          <span>2일차 <b id="stat-d2-rev" class="text-slate-700">0 원</b></span>
         </p>
       </article>
       <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -76,131 +78,7 @@
       </article>
     </section>
 
-    <section class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <article class="overflow-hidden rounded-lg border border-indigo-100 bg-white shadow-sm">
-        <div class="border-b border-indigo-100 bg-indigo-50 px-5 py-4">
-          <h2 class="text-lg font-extrabold text-indigo-950">1일차 교육 예산</h2>
-          <p class="text-sm text-indigo-700">참가 등록비와 직접 운영비를 입력합니다.</p>
-        </div>
-        <div class="space-y-5 p-5">
-          <div>
-            <h3 class="mb-3 text-sm font-bold text-slate-700">참가 인원 및 등록비</h3>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <label class="block text-xs font-semibold text-slate-600" for="d1-student-count">학생 인원</label>
-                <input id="d1-student-count" type="number" min="0" value="20" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                <label class="mt-3 block text-xs font-semibold text-slate-600" for="d1-student-fee">학생 1인당 참가비</label>
-                <input id="d1-student-fee" type="number" min="0" step="1000" value="50000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              </div>
-              <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <label class="block text-xs font-semibold text-slate-600" for="d1-general-count">일반 인원</label>
-                <input id="d1-general-count" type="number" min="0" value="15" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                <label class="mt-3 block text-xs font-semibold text-slate-600" for="d1-general-fee">일반 1인당 참가비</label>
-                <input id="d1-general-fee" type="number" min="0" step="1000" value="100000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              </div>
-            </div>
-            <p class="mt-2 text-right text-xs font-bold text-slate-600">1일차 매출: <span id="d1-rev-display" class="text-blue-600">0</span> 원</p>
-          </div>
-
-          <div class="border-t border-slate-100 pt-5">
-            <h3 class="mb-3 text-sm font-bold text-slate-700">직접 운영비</h3>
-            <div class="space-y-3">
-              <div>
-                <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-                  <label class="text-xs font-semibold text-slate-600">중식 비용</label>
-                  <div class="flex gap-3 text-[11px] text-slate-500">
-                    <label><input type="radio" name="d1-lunch-mode" value="total" checked onchange="toggleLunchMode(1)"> 총액</label>
-                    <label><input type="radio" name="d1-lunch-mode" value="per" onchange="toggleLunchMode(1)"> 1인당</label>
-                  </div>
-                </div>
-                <div id="d1-lunch-total-container">
-                  <input id="d1-lunch-cost" type="number" min="0" step="1000" value="350000" oninput="calculate()" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                </div>
-                <div id="d1-lunch-per-container" class="hidden grid-cols-2 gap-2">
-                  <input id="d1-lunch-per-price" type="number" min="0" step="500" value="10000" oninput="calculate()" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-                  <div class="flex items-center rounded-md bg-slate-100 px-3 text-xs text-slate-600">총 인원: <b id="d1-total-people" class="ml-1">35</b>명</div>
-                </div>
-              </div>
-              <label class="block text-xs font-semibold text-slate-600">교재 제작 비용<input id="d1-book-cost" type="number" min="0" step="1000" value="200000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800"></label>
-              <label class="block text-xs font-semibold text-slate-600">강사료<input id="d1-instructor-cost" type="number" min="0" step="10000" value="500000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800"></label>
-              <label class="block text-xs font-semibold text-slate-600">기타 비용<input id="d1-etc-cost" type="number" min="0" step="1000" value="300000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800"></label>
-              <div class="flex justify-between rounded-md border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs">
-                <span class="font-bold text-indigo-900">학회 수수료 15%</span>
-                <span id="d1-academic-cost" class="font-extrabold text-indigo-700">0 원</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
-            <p class="flex justify-between"><span class="text-slate-500">총 매출</span><b id="d1-summary-rev">0 원</b></p>
-            <p class="mt-1 flex justify-between"><span class="text-slate-500">총 지출</span><b id="d1-summary-exp">0 원</b></p>
-            <p class="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base"><span class="font-bold">잔액</span><b id="d1-summary-profit" class="text-emerald-600">0 원</b></p>
-          </div>
-        </div>
-      </article>
-
-      <article class="overflow-hidden rounded-lg border border-emerald-100 bg-white shadow-sm">
-        <div class="border-b border-emerald-100 bg-emerald-50 px-5 py-4">
-          <h2 class="text-lg font-extrabold text-emerald-950">2일차 교육 예산</h2>
-          <p class="text-sm text-emerald-700">둘째 날의 참가비와 운영비를 별도로 계산합니다.</p>
-        </div>
-        <div class="space-y-5 p-5">
-          <div>
-            <h3 class="mb-3 text-sm font-bold text-slate-700">참가 인원 및 등록비</h3>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <label class="block text-xs font-semibold text-slate-600" for="d2-student-count">학생 인원</label>
-                <input id="d2-student-count" type="number" min="0" value="18" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                <label class="mt-3 block text-xs font-semibold text-slate-600" for="d2-student-fee">학생 1인당 참가비</label>
-                <input id="d2-student-fee" type="number" min="0" step="1000" value="50000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              </div>
-              <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <label class="block text-xs font-semibold text-slate-600" for="d2-general-count">일반 인원</label>
-                <input id="d2-general-count" type="number" min="0" value="12" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                <label class="mt-3 block text-xs font-semibold text-slate-600" for="d2-general-fee">일반 1인당 참가비</label>
-                <input id="d2-general-fee" type="number" min="0" step="1000" value="100000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-              </div>
-            </div>
-            <p class="mt-2 text-right text-xs font-bold text-slate-600">2일차 매출: <span id="d2-rev-display" class="text-blue-600">0</span> 원</p>
-          </div>
-
-          <div class="border-t border-slate-100 pt-5">
-            <h3 class="mb-3 text-sm font-bold text-slate-700">직접 운영비</h3>
-            <div class="space-y-3">
-              <div>
-                <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-                  <label class="text-xs font-semibold text-slate-600">중식 비용</label>
-                  <div class="flex gap-3 text-[11px] text-slate-500">
-                    <label><input type="radio" name="d2-lunch-mode" value="total" checked onchange="toggleLunchMode(2)"> 총액</label>
-                    <label><input type="radio" name="d2-lunch-mode" value="per" onchange="toggleLunchMode(2)"> 1인당</label>
-                  </div>
-                </div>
-                <div id="d2-lunch-total-container">
-                  <input id="d2-lunch-cost" type="number" min="0" step="1000" value="300000" oninput="calculate()" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                </div>
-                <div id="d2-lunch-per-container" class="hidden grid-cols-2 gap-2">
-                  <input id="d2-lunch-per-price" type="number" min="0" step="500" value="10000" oninput="calculate()" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-                  <div class="flex items-center rounded-md bg-slate-100 px-3 text-xs text-slate-600">총 인원: <b id="d2-total-people" class="ml-1">30</b>명</div>
-                </div>
-              </div>
-              <label class="block text-xs font-semibold text-slate-600">교재 제작 비용<input id="d2-book-cost" type="number" min="0" step="1000" value="200000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800"></label>
-              <label class="block text-xs font-semibold text-slate-600">강사료<input id="d2-instructor-cost" type="number" min="0" step="10000" value="500000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800"></label>
-              <label class="block text-xs font-semibold text-slate-600">기타 비용<input id="d2-etc-cost" type="number" min="0" step="1000" value="250000" oninput="calculate()" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal text-slate-800"></label>
-              <div class="flex justify-between rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs">
-                <span class="font-bold text-emerald-900">학회 수수료 15%</span>
-                <span id="d2-academic-cost" class="font-extrabold text-emerald-700">0 원</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
-            <p class="flex justify-between"><span class="text-slate-500">총 매출</span><b id="d2-summary-rev">0 원</b></p>
-            <p class="mt-1 flex justify-between"><span class="text-slate-500">총 지출</span><b id="d2-summary-exp">0 원</b></p>
-            <p class="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base"><span class="font-bold">잔액</span><b id="d2-summary-profit" class="text-emerald-600">0 원</b></p>
-          </div>
-        </div>
-      </article>
-    </section>
+    <section id="day-panels" class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2"></section>
 
     <section class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
       <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -226,18 +104,7 @@
                 <th class="px-4 py-3 text-right">합계</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
-              <tr><td class="px-4 py-2.5">학생 참가비 매출</td><td id="tbl-d1-student-rev" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-student-rev" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-student-rev" class="px-4 py-2.5 text-right font-bold">0 원</td></tr>
-              <tr><td class="px-4 py-2.5">일반 참가비 매출</td><td id="tbl-d1-general-rev" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-general-rev" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-general-rev" class="px-4 py-2.5 text-right font-bold">0 원</td></tr>
-              <tr class="bg-blue-50 font-bold text-blue-950"><td class="px-4 py-2.5">총 매출</td><td id="tbl-d1-total-rev" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-total-rev" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-total-rev" class="px-4 py-2.5 text-right text-blue-700">0 원</td></tr>
-              <tr><td class="px-4 py-2.5">중식 비용</td><td id="tbl-d1-lunch" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-lunch" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-lunch" class="px-4 py-2.5 text-right font-bold">0 원</td></tr>
-              <tr><td class="px-4 py-2.5">교재 제작 비용</td><td id="tbl-d1-book" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-book" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-book" class="px-4 py-2.5 text-right font-bold">0 원</td></tr>
-              <tr><td class="px-4 py-2.5">강사료</td><td id="tbl-d1-instructor" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-instructor" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-instructor" class="px-4 py-2.5 text-right font-bold">0 원</td></tr>
-              <tr><td class="px-4 py-2.5">기타 비용</td><td id="tbl-d1-etc" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-etc" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-etc" class="px-4 py-2.5 text-right font-bold">0 원</td></tr>
-              <tr class="bg-indigo-50 text-indigo-950"><td class="px-4 py-2.5 font-bold">학회 수수료 15%</td><td id="tbl-d1-academic" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-academic" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-academic" class="px-4 py-2.5 text-right font-bold text-indigo-700">0 원</td></tr>
-              <tr class="bg-amber-50 font-bold text-amber-950"><td class="px-4 py-2.5">총 지출</td><td id="tbl-d1-total-exp" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-d2-total-exp" class="px-4 py-2.5 text-right">0 원</td><td id="tbl-total-total-exp" class="px-4 py-2.5 text-right text-amber-700">0 원</td></tr>
-              <tr class="bg-emerald-100 text-base font-extrabold text-emerald-950"><td class="px-4 py-3">최종 잔액</td><td id="tbl-d1-net" class="px-4 py-3 text-right">0 원</td><td id="tbl-d2-net" class="px-4 py-3 text-right">0 원</td><td id="tbl-total-net" class="px-4 py-3 text-right text-emerald-700">0 원</td></tr>
-            </tbody>
+            <tbody id="summary-body" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </article>
@@ -253,6 +120,25 @@
   </footer>
 
   <script>
+    const countPresets = [10, 15, 20, 25, 30, 40, 50, 60, 70];
+    const feePresets = [200000, 250000, 300000, 350000];
+    const mealPresets = [10000, 15000];
+    const dayDefaults = {
+      1: { tone: "indigo", studentCount: 20, generalCount: 15, studentFee: 200000, generalFee: 250000, mealPrice: 10000, bookCost: 200000, instructorCost: 500000, etcCost: 300000 },
+      2: { tone: "emerald", studentCount: 20, generalCount: 15, studentFee: 200000, generalFee: 250000, mealPrice: 10000, bookCost: 200000, instructorCost: 500000, etcCost: 250000 }
+    };
+    const rows = [
+      ["student-rev", "학생 참가비 매출"],
+      ["general-rev", "일반 참가비 매출"],
+      ["total-rev", "총 매출", "bg-blue-50 font-bold text-blue-950"],
+      ["meal", "식비"],
+      ["book", "교재 제작 비용"],
+      ["instructor", "강사료"],
+      ["etc", "기타 비용"],
+      ["academic", "학회 수수료 15%", "bg-indigo-50 font-bold text-indigo-950"],
+      ["total-exp", "총 지출", "bg-amber-50 font-bold text-amber-950"],
+      ["net", "최종 잔액", "bg-emerald-100 text-base font-extrabold text-emerald-950"]
+    ];
     let costChart = null;
 
     function formatNumber(num) {
@@ -261,6 +147,10 @@
 
     function won(num) {
       return `${formatNumber(num)} 원`;
+    }
+
+    function manwon(num) {
+      return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 }).format(num / 10000)}만원`;
     }
 
     function getVal(id) {
@@ -274,57 +164,151 @@
       if (el) el.innerText = value;
     }
 
-    function toggleLunchMode(day) {
-      const mode = document.querySelector(`input[name="d${day}-lunch-mode"]:checked`).value;
-      const totalContainer = document.getElementById(`d${day}-lunch-total-container`);
-      const perContainer = document.getElementById(`d${day}-lunch-per-container`);
+    function quickButtons(inputId, values, formatter) {
+      return `
+        <div class="flex flex-wrap gap-1.5">
+          ${values.map((value) => `
+            <button type="button" data-target="${inputId}" data-value="${value}" onclick="setPreset('${inputId}', ${value})"
+              class="quick-btn rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-blue-400 hover:text-blue-700">
+              ${formatter(value)}
+            </button>
+          `).join("")}
+        </div>
+      `;
+    }
 
-      totalContainer.classList.toggle("hidden", mode !== "total");
-      perContainer.classList.toggle("hidden", mode !== "per");
-      perContainer.classList.toggle("grid", mode === "per");
+    function inputRow(label, inputId, value, step, presets, formatter, hint = "") {
+      return `
+        <div class="grid gap-2 border-b border-slate-100 py-2.5 last:border-b-0 sm:grid-cols-[118px_1fr] sm:items-center">
+          <label for="${inputId}" class="text-sm font-bold text-slate-700">${label}</label>
+          <div class="grid gap-2 lg:grid-cols-[1fr_132px] lg:items-center">
+            ${quickButtons(inputId, presets, formatter)}
+            <div class="flex items-center gap-2">
+              <input id="${inputId}" type="number" min="0" step="${step}" value="${value}" oninput="calculate()"
+                class="w-full rounded-md border border-slate-300 px-3 py-2 text-right text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              ${hint ? `<span class="min-w-fit text-xs font-semibold text-slate-500">${hint}</span>` : ""}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function costRow(label, inputId, value, step, hint = "원") {
+      return `
+        <div class="grid gap-2 border-b border-slate-100 py-2.5 last:border-b-0 sm:grid-cols-[118px_1fr] sm:items-center">
+          <label for="${inputId}" class="text-sm font-bold text-slate-700">${label}</label>
+          <div class="flex items-center gap-2">
+            <input id="${inputId}" type="number" min="0" step="${step}" value="${value}" oninput="calculate()"
+              class="w-full rounded-md border border-slate-300 px-3 py-2 text-right text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <span class="min-w-fit text-xs font-semibold text-slate-500">${hint}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function dayPanel(day) {
+      const data = dayDefaults[day];
+      const tone = data.tone;
+      return `
+        <article class="overflow-hidden rounded-lg border border-${tone}-100 bg-white shadow-sm">
+          <div class="border-b border-${tone}-100 bg-${tone}-50 px-5 py-4">
+            <h2 class="text-lg font-extrabold text-${tone}-950">${day}일차 교육 예산</h2>
+            <p class="text-sm text-${tone}-700">항목별 값을 옆으로 보면서 빠르게 조정합니다.</p>
+          </div>
+          <div class="space-y-5 p-5">
+            <section>
+              <h3 class="mb-2 text-sm font-extrabold text-slate-800">참가 인원 및 등록비</h3>
+              <div class="rounded-lg border border-slate-200 bg-slate-50 px-4">
+                ${inputRow("학생 인원", `d${day}-student-count`, data.studentCount, 1, countPresets, (v) => `${v}명`, "명")}
+                ${inputRow("학생 등록비", `d${day}-student-fee`, data.studentFee, 10000, feePresets, manwon, "원")}
+                ${inputRow("일반 인원", `d${day}-general-count`, data.generalCount, 1, countPresets, (v) => `${v}명`, "명")}
+                ${inputRow("일반 등록비", `d${day}-general-fee`, data.generalFee, 10000, feePresets, manwon, "원")}
+              </div>
+              <p class="mt-2 text-right text-sm font-extrabold text-slate-700">${day}일차 매출: <span id="d${day}-rev-display" class="text-blue-600">0</span> 원</p>
+            </section>
+
+            <section class="border-t border-slate-100 pt-5">
+              <h3 class="mb-2 text-sm font-extrabold text-slate-800">직접 운영비</h3>
+              <div class="rounded-lg border border-slate-200 bg-white px-4">
+                ${inputRow("식비", `d${day}-meal-price`, data.mealPrice, 1000, mealPresets, manwon, "원/인")}
+                <div class="grid gap-2 border-b border-slate-100 py-2.5 sm:grid-cols-[118px_1fr] sm:items-center">
+                  <span class="text-sm font-bold text-slate-700">식비 합계</span>
+                  <div class="flex justify-between rounded-md bg-amber-50 px-3 py-2 text-sm">
+                    <span class="text-slate-600">총 인원 <b id="d${day}-total-people">0</b>명 기준</span>
+                    <b id="d${day}-meal-total" class="text-amber-700">0 원</b>
+                  </div>
+                </div>
+                ${costRow("교재비", `d${day}-book-cost`, data.bookCost, 10000)}
+                ${costRow("강사료", `d${day}-instructor-cost`, data.instructorCost, 10000)}
+                ${costRow("기타 비용", `d${day}-etc-cost`, data.etcCost, 10000)}
+                <div class="flex justify-between py-2.5 text-sm">
+                  <span class="font-bold text-${tone}-900">학회 수수료 15%</span>
+                  <span id="d${day}-academic-cost" class="font-extrabold text-${tone}-700">0 원</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-center text-xs">
+              <div><p class="font-semibold text-slate-500">매출</p><p id="d${day}-summary-rev" class="mt-1 font-extrabold text-slate-900">0 원</p></div>
+              <div><p class="font-semibold text-slate-500">지출</p><p id="d${day}-summary-exp" class="mt-1 font-extrabold text-slate-900">0 원</p></div>
+              <div><p class="font-semibold text-slate-500">잔액</p><p id="d${day}-summary-profit" class="mt-1 font-extrabold text-emerald-600">0 원</p></div>
+            </section>
+          </div>
+        </article>
+      `;
+    }
+
+    function render() {
+      document.getElementById("day-panels").innerHTML = dayPanel(1) + dayPanel(2);
+      document.getElementById("summary-body").innerHTML = rows.map(([key, label, cls = ""]) => `
+        <tr class="${cls}">
+          <td class="px-4 py-2.5">${label}</td>
+          <td id="tbl-d1-${key}" class="px-4 py-2.5 text-right">0 원</td>
+          <td id="tbl-d2-${key}" class="px-4 py-2.5 text-right">0 원</td>
+          <td id="tbl-total-${key}" class="px-4 py-2.5 text-right font-bold">0 원</td>
+        </tr>
+      `).join("");
+    }
+
+    function setPreset(inputId, value) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.value = value;
       calculate();
+    }
+
+    function updatePresetState() {
+      document.querySelectorAll(".quick-btn").forEach((button) => {
+        const input = document.getElementById(button.dataset.target);
+        button.classList.toggle("active", input && Number(input.value) === Number(button.dataset.value));
+      });
     }
 
     function getDayValues(day) {
       const studentCount = getVal(`d${day}-student-count`);
-      const studentFee = getVal(`d${day}-student-fee`);
       const generalCount = getVal(`d${day}-general-count`);
+      const studentFee = getVal(`d${day}-student-fee`);
       const generalFee = getVal(`d${day}-general-fee`);
+      const totalPeople = studentCount + generalCount;
       const studentRevenue = studentCount * studentFee;
       const generalRevenue = generalCount * generalFee;
       const totalRevenue = studentRevenue + generalRevenue;
-      const totalPeople = studentCount + generalCount;
-      const lunchMode = document.querySelector(`input[name="d${day}-lunch-mode"]:checked`).value;
-      const lunchCost = lunchMode === "total" ? getVal(`d${day}-lunch-cost`) : getVal(`d${day}-lunch-per-price`) * totalPeople;
+      const mealCost = totalPeople * getVal(`d${day}-meal-price`);
       const bookCost = getVal(`d${day}-book-cost`);
       const instructorCost = getVal(`d${day}-instructor-cost`);
       const etcCost = getVal(`d${day}-etc-cost`);
       const academicCost = totalRevenue * 0.15;
-      const totalExpense = lunchCost + bookCost + instructorCost + etcCost + academicCost;
+      const totalExpense = mealCost + bookCost + instructorCost + etcCost + academicCost;
       const netProfit = totalRevenue - totalExpense;
-
-      return {
-        studentRevenue,
-        generalRevenue,
-        totalRevenue,
-        totalPeople,
-        lunchCost,
-        bookCost,
-        instructorCost,
-        etcCost,
-        academicCost,
-        totalExpense,
-        netProfit
-      };
+      return { studentRevenue, generalRevenue, totalRevenue, totalPeople, mealCost, bookCost, instructorCost, etcCost, academicCost, totalExpense, netProfit };
     }
 
     function calculate() {
       const d1 = getDayValues(1);
       const d2 = getDayValues(2);
-
       const totals = {
         revenue: d1.totalRevenue + d2.totalRevenue,
-        lunch: d1.lunchCost + d2.lunchCost,
+        meal: d1.mealCost + d2.mealCost,
         book: d1.bookCost + d2.bookCost,
         instructor: d1.instructorCost + d2.instructorCost,
         etc: d1.etcCost + d2.etcCost,
@@ -332,7 +316,6 @@
         expense: d1.totalExpense + d2.totalExpense,
         net: d1.netProfit + d2.netProfit
       };
-
       const profitMargin = totals.revenue > 0 ? (totals.net / totals.revenue * 100).toFixed(1) : "0.0";
       const expenseRatio = totals.revenue > 0 ? (totals.expense / totals.revenue * 100).toFixed(1) : "0.0";
 
@@ -348,6 +331,7 @@
       [1, 2].forEach((day) => {
         const data = day === 1 ? d1 : d2;
         setText(`d${day}-total-people`, formatNumber(data.totalPeople));
+        setText(`d${day}-meal-total`, won(data.mealCost));
         setText(`d${day}-rev-display`, formatNumber(data.totalRevenue));
         setText(`d${day}-academic-cost`, won(data.academicCost));
         setText(`d${day}-summary-rev`, won(data.totalRevenue));
@@ -356,7 +340,7 @@
         setText(`tbl-d${day}-student-rev`, won(data.studentRevenue));
         setText(`tbl-d${day}-general-rev`, won(data.generalRevenue));
         setText(`tbl-d${day}-total-rev`, won(data.totalRevenue));
-        setText(`tbl-d${day}-lunch`, won(data.lunchCost));
+        setText(`tbl-d${day}-meal`, won(data.mealCost));
         setText(`tbl-d${day}-book`, won(data.bookCost));
         setText(`tbl-d${day}-instructor`, won(data.instructorCost));
         setText(`tbl-d${day}-etc`, won(data.etcCost));
@@ -368,37 +352,27 @@
       setText("tbl-total-student-rev", won(d1.studentRevenue + d2.studentRevenue));
       setText("tbl-total-general-rev", won(d1.generalRevenue + d2.generalRevenue));
       setText("tbl-total-total-rev", won(totals.revenue));
-      setText("tbl-total-lunch", won(totals.lunch));
+      setText("tbl-total-meal", won(totals.meal));
       setText("tbl-total-book", won(totals.book));
       setText("tbl-total-instructor", won(totals.instructor));
       setText("tbl-total-etc", won(totals.etc));
       setText("tbl-total-academic", won(totals.academic));
       setText("tbl-total-total-exp", won(totals.expense));
       setText("tbl-total-net", won(totals.net));
-
+      updatePresetState();
       updateChart(totals);
     }
 
     function updateChart(totals) {
       const canvas = document.getElementById("costChart");
       if (!canvas || typeof Chart === "undefined") return;
-
-      const values = [
-        totals.lunch,
-        totals.book,
-        totals.instructor,
-        totals.etc,
-        totals.academic,
-        Math.max(0, totals.net)
-      ];
+      const values = [totals.meal, totals.book, totals.instructor, totals.etc, totals.academic, Math.max(0, totals.net)];
       const hasData = values.some((value) => value > 0);
-
       if (costChart) costChart.destroy();
-
       costChart = new Chart(canvas.getContext("2d"), {
         type: "doughnut",
         data: {
-          labels: ["중식비", "교재 제작비", "강사료", "기타 비용", "학회 수수료", "잔액"],
+          labels: ["식비", "교재비", "강사료", "기타 비용", "학회 수수료", "잔액"],
           datasets: [{
             data: hasData ? values : [1, 1, 1, 1, 1, 1],
             backgroundColor: ["#f59e0b", "#2563eb", "#db2777", "#7c3aed", "#4f46e5", "#059669"],
@@ -411,39 +385,26 @@
           maintainAspectRatio: false,
           cutout: "64%",
           plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                boxWidth: 12,
-                padding: 12,
-                font: {
-                  family: "Noto Sans KR",
-                  size: 11
-                }
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => ` ${context.label}: ${won(context.raw || 0)}`
-              }
-            }
+            legend: { position: "bottom", labels: { boxWidth: 12, padding: 12, font: { family: "Noto Sans KR", size: 11 } } },
+            tooltip: { callbacks: { label: (context) => ` ${context.label}: ${won(context.raw || 0)}` } }
           }
         }
       });
     }
 
     function resetAllInputs() {
-      [
-        "d1-student-count", "d1-student-fee", "d1-general-count", "d1-general-fee",
-        "d1-lunch-cost", "d1-lunch-per-price", "d1-book-cost", "d1-instructor-cost", "d1-etc-cost",
-        "d2-student-count", "d2-student-fee", "d2-general-count", "d2-general-fee",
-        "d2-lunch-cost", "d2-lunch-per-price", "d2-book-cost", "d2-instructor-cost", "d2-etc-cost"
-      ].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.value = 0;
+      Object.entries(dayDefaults).forEach(([day, values]) => {
+        document.getElementById(`d${day}-student-count`).value = values.studentCount;
+        document.getElementById(`d${day}-general-count`).value = values.generalCount;
+        document.getElementById(`d${day}-student-fee`).value = values.studentFee;
+        document.getElementById(`d${day}-general-fee`).value = values.generalFee;
+        document.getElementById(`d${day}-meal-price`).value = values.mealPrice;
+        document.getElementById(`d${day}-book-cost`).value = values.bookCost;
+        document.getElementById(`d${day}-instructor-cost`).value = values.instructorCost;
+        document.getElementById(`d${day}-etc-cost`).value = values.etcCost;
       });
       calculate();
-      showToast("모든 입력값을 초기화했습니다.");
+      showToast("기본값으로 되돌렸습니다.");
     }
 
     function copySummaryToClipboard() {
@@ -452,8 +413,8 @@
   - 1일차 매출: ${document.getElementById("tbl-d1-total-rev").innerText}
   - 2일차 매출: ${document.getElementById("tbl-d2-total-rev").innerText}
 총 지출: ${document.getElementById("tbl-total-total-exp").innerText}
-  - 중식비: ${document.getElementById("tbl-total-lunch").innerText}
-  - 교재 제작비: ${document.getElementById("tbl-total-book").innerText}
+  - 식비: ${document.getElementById("tbl-total-meal").innerText}
+  - 교재비: ${document.getElementById("tbl-total-book").innerText}
   - 강사료: ${document.getElementById("tbl-total-instructor").innerText}
   - 기타 비용: ${document.getElementById("tbl-total-etc").innerText}
   - 학회 수수료 15%: ${document.getElementById("tbl-total-academic").innerText}
@@ -463,7 +424,6 @@
         navigator.clipboard.writeText(text).then(() => showToast("요약을 클립보드에 복사했습니다."));
         return;
       }
-
       const textarea = document.createElement("textarea");
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -484,7 +444,10 @@
       }, 2500);
     }
 
-    window.addEventListener("load", calculate);
+    window.addEventListener("load", () => {
+      render();
+      calculate();
+    });
   </script>
 </body>
 </html>
