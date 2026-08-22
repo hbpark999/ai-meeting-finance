@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>전자파 AI 연구반 교육행사 일정표</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f8fafc;
+    }
+    input, textarea, select {
+      font: inherit;
+    }
+    .pdf-exporting .no-pdf {
+      display: none !important;
+    }
+    .pdf-exporting header {
+      position: static !important;
+    }
+    @media print {
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+      body {
+        background: #ffffff !important;
+      }
+      header, .no-pdf, footer {
+        display: none !important;
+      }
+      main {
+        max-width: none !important;
+        padding: 0 !important;
+      }
+      #export-area {
+        box-shadow: none !important;
+        border: 0 !important;
+      }
+      .break-avoid {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <header class="sticky top-0 z-50 border-b border-indigo-800 bg-indigo-950 text-white shadow-sm">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200">EMC Society AI Study Group</p>
+        <h1 class="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">전자파학회 전자파 AI 연구반 교육행사 일정표</h1>
+        <p class="mt-1 text-sm text-indigo-100">1일차/2일차 프로그램을 작성하고, Notion 공유용 일정표와 PDF를 생성합니다.</p>
+        <p class="mt-2 inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-indigo-100">Schedule UI v1 · 2026-08-22</p>
+      </div>
+      <div class="no-pdf flex flex-wrap gap-2">
+        <a href="./" class="rounded-md bg-indigo-800 px-3 py-2 text-xs font-semibold text-indigo-50 transition hover:bg-indigo-700">비용 계산기</a>
+        <button type="button" onclick="loadTemplate()" class="rounded-md bg-indigo-800 px-3 py-2 text-xs font-semibold text-indigo-50 transition hover:bg-indigo-700">기본 일정</button>
+        <button type="button" onclick="copyScheduleText()" class="rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500">텍스트 복사</button>
+        <button type="button" onclick="exportPdf()" class="rounded-md bg-white px-3 py-2 text-xs font-extrabold text-indigo-900 transition hover:bg-indigo-100">PDF 저장</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <section class="no-pdf mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div class="grid gap-4 lg:grid-cols-[220px_1fr] lg:items-center">
+        <div class="flex gap-2">
+          <button id="day-tab-1" type="button" onclick="selectDay(1)" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-extrabold text-white">1일차</button>
+          <button id="day-tab-2" type="button" onclick="selectDay(2)" class="rounded-md bg-slate-100 px-4 py-2 text-sm font-extrabold text-slate-600 hover:bg-slate-200">2일차</button>
+        </div>
+        <label class="grid gap-1 text-sm font-bold text-slate-700">
+          행사명
+          <input id="event-title-input" type="text" value="전자파 AI 연구반 AI 기반 전자파 기술 교육"
+            oninput="setEventTitle(this.value)" class="rounded-md border border-slate-300 px-3 py-2 font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
+        </label>
+      </div>
+
+      <div class="mt-4 grid gap-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <label class="text-xs font-bold text-slate-600">시작
+            <input id="batch-start" type="time" value="09:00" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
+          </label>
+          <label class="text-xs font-bold text-slate-600">강의
+            <select id="batch-lecture" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
+              <option value="50">50분</option>
+              <option value="100" selected>100분</option>
+            </select>
+          </label>
+          <label class="text-xs font-bold text-slate-600">휴식
+            <input id="batch-break" type="number" min="0" value="10" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-right">
+          </label>
+          <label class="text-xs font-bold text-slate-600">점심 시작
+            <input id="batch-lunch-start" type="time" value="12:30" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
+          </label>
+          <label class="text-xs font-bold text-slate-600">점심
+            <input id="batch-lunch" type="number" min="0" value="60" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-right">
+          </label>
+        </div>
+        <button type="button" onclick="applyBatchSchedule()" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-indigo-700">시간표 자동 생성</button>
+      </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-[430px_1fr]">
+      <aside class="no-pdf rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-4 py-3">
+          <h2 class="text-sm font-extrabold text-slate-900"><span id="editor-day-label">1일차</span> 프로그램 편집</h2>
+          <div class="flex gap-1.5">
+            <button type="button" onclick="addItem('lecture')" class="rounded bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white">강의</button>
+            <button type="button" onclick="addItem('break')" class="rounded bg-amber-600 px-2.5 py-1 text-xs font-bold text-white">휴식</button>
+            <button type="button" onclick="addItem('lunch')" class="rounded bg-teal-600 px-2.5 py-1 text-xs font-bold text-white">점심</button>
+          </div>
+        </div>
+        <div id="schedule-editor" class="max-h-[760px] space-y-3 overflow-y-auto p-4"></div>
+      </aside>
+
+      <section id="export-area" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="border-b-2 border-indigo-950 pb-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p id="preview-day" class="inline-flex rounded bg-indigo-100 px-2.5 py-1 text-xs font-extrabold text-indigo-800">DAY 1 PROGRAM</p>
+              <h2 id="preview-title" class="mt-2 text-2xl font-extrabold leading-tight text-slate-950">전자파 AI 연구반 AI 기반 전자파 기술 교육</h2>
+              <p class="mt-1 text-sm text-slate-500">전자파학회 전자파 AI 연구반 교육행사</p>
+            </div>
+            <div class="text-left text-sm sm:text-right">
+              <p class="font-extrabold text-indigo-900" id="preview-time-range">09:00 ~ 17:00</p>
+              <p class="text-xs text-slate-500">프로그램 일정표</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 overflow-x-auto">
+          <table class="w-full min-w-[720px] border-collapse text-sm">
+            <thead>
+              <tr class="bg-indigo-950 text-white">
+                <th class="w-36 border border-indigo-900 px-3 py-3 text-center text-xs">시간</th>
+                <th class="border border-indigo-900 px-4 py-3 text-left text-xs">교육 내용</th>
+                <th class="w-36 border border-indigo-900 px-3 py-3 text-center text-xs">강사</th>
+                <th class="w-28 border border-indigo-900 px-3 py-3 text-center text-xs">비고</th>
+              </tr>
+            </thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-1 border-t border-slate-200 pt-3 text-xs text-slate-500 sm:flex-row sm:justify-between">
+          <span>주관: 전자파학회 전자파 AI 연구반</span>
+          <span>교재 및 중식 제공 여부는 행사 운영안에 따름</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 translate-y-20 rounded-lg bg-slate-950 px-4 py-3 text-xs font-semibold text-white opacity-0 shadow-xl transition-all duration-300">
+    <span id="toast-message">완료되었습니다.</span>
+  </div>
+
+  <footer class="no-pdf mt-8 border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
+    전자파학회 전자파 AI 연구반 교육행사 일정표 &copy; 2026
+  </footer>
+
+  <script>
+    let currentDay = 1;
+    let eventTitle = "전자파 AI 연구반 AI 기반 전자파 기술 교육";
+    const scheduleData = { 1: [], 2: [] };
+
+    function timeToMinutes(time) {
+      const [hour, minute] = String(time || "00:00").split(":").map(Number);
+      return hour * 60 + minute;
+    }
+
+    function minutesToTime(total) {
+      const safe = Math.max(0, total);
+      const hour = Math.floor(safe / 60) % 24;
+      const minute = safe % 60;
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function setEventTitle(value) {
+      eventTitle = value.trim() || "전자파 AI 연구반 AI 기반 전자파 기술 교육";
+      renderPreview();
+    }
+
+    function selectDay(day) {
+      currentDay = day;
+      document.getElementById("day-tab-1").className = day === 1
+        ? "rounded-md bg-indigo-600 px-4 py-2 text-sm font-extrabold text-white"
+        : "rounded-md bg-slate-100 px-4 py-2 text-sm font-extrabold text-slate-600 hover:bg-slate-200";
+      document.getElementById("day-tab-2").className = day === 2
+        ? "rounded-md bg-indigo-600 px-4 py-2 text-sm font-extrabold text-white"
+        : "rounded-md bg-slate-100 px-4 py-2 text-sm font-extrabold text-slate-600 hover:bg-slate-200";
+      document.getElementById("editor-day-label").innerText = `${day}일차`;
+      renderEditor();
+      renderPreview();
+    }
+
+    function newItem(type, startTime = "09:00", endTime = "10:00") {
+      const labels = { lecture: "", break: "휴식", lunch: "점심" };
+      return {
+        id: Date.now() + Math.random(),
+        type,
+        startTime,
+        endTime,
+        topic: labels[type] || "",
+        speaker: "",
+        note: ""
+      };
+    }
+
+    function addItem(type) {
+      const list = scheduleData[currentDay];
+      const startTime = list.length ? list[list.length - 1].endTime : "09:00";
+      const duration = type === "lecture" ? 50 : type === "lunch" ? 60 : 10;
+      list.push(newItem(type, startTime, minutesToTime(timeToMinutes(startTime) + duration)));
+      renderEditor();
+      renderPreview();
+    }
+
+    function removeItem(index) {
+      scheduleData[currentDay].splice(index, 1);
+      renderEditor();
+      renderPreview();
+    }
+
+    function moveItem(index, direction) {
+      const list = scheduleData[currentDay];
+      const target = index + direction;
+      if (target < 0 || target >= list.length) return;
+      [list[index], list[target]] = [list[target], list[index]];
+      renderEditor();
+      renderPreview();
+    }
+
+    function updateItem(index, field, value) {
+      const item = scheduleData[currentDay][index];
+      if (!item) return;
+      item[field] = value;
+      renderPreview();
+    }
+
+    function applyBatchSchedule() {
+      const start = timeToMinutes(document.getElementById("batch-start").value);
+      const lectureDuration = Number(document.getElementById("batch-lecture").value) || 100;
+      const breakDuration = Number(document.getElementById("batch-break").value) || 10;
+      const lunchStart = timeToMinutes(document.getElementById("batch-lunch-start").value);
+      const lunchDuration = Number(document.getElementById("batch-lunch").value) || 60;
+
+      const items = [];
+      let cursor = start;
+      let lectureNo = 1;
+
+      while (cursor < 17 * 60) {
+        if (cursor < lunchStart && cursor + lectureDuration > lunchStart) {
+          items.push(newItem("lunch", minutesToTime(lunchStart), minutesToTime(lunchStart + lunchDuration)));
+          cursor = lunchStart + lunchDuration;
+          continue;
+        }
+
+        if (cursor === lunchStart) {
+          items.push(newItem("lunch", minutesToTime(cursor), minutesToTime(cursor + lunchDuration)));
+          cursor += lunchDuration;
+          continue;
+        }
+
+        const end = cursor + lectureDuration;
+        const lecture = newItem("lecture", minutesToTime(cursor), minutesToTime(end));
+        lecture.topic = `${lectureNo}교시 교육 주제`;
+        items.push(lecture);
+        lectureNo += 1;
+        cursor = end;
+
+        if (cursor < 17 * 60 && cursor !== lunchStart && breakDuration > 0) {
+          items.push(newItem("break", minutesToTime(cursor), minutesToTime(cursor + breakDuration)));
+          cursor += breakDuration;
+        }
+      }
+
+      scheduleData[currentDay] = items;
+      renderEditor();
+      renderPreview();
+      showToast(`${currentDay}일차 시간표를 자동 생성했습니다.`);
+    }
+
+    function loadTemplate() {
+      scheduleData[1] = [
+        { id: 101, type: "lecture", startTime: "09:00", endTime: "10:40", topic: "AI 기반 전자파 해석 개요", speaker: "", note: "" },
+        { id: 102, type: "break", startTime: "10:40", endTime: "10:50", topic: "휴식", speaker: "", note: "" },
+        { id: 103, type: "lecture", startTime: "10:50", endTime: "12:30", topic: "데이터 기반 모델링 실습", speaker: "", note: "" },
+        { id: 104, type: "lunch", startTime: "12:30", endTime: "13:30", topic: "점심", speaker: "", note: "" },
+        { id: 105, type: "lecture", startTime: "13:30", endTime: "15:10", topic: "전자파 AI 적용 사례", speaker: "", note: "" },
+        { id: 106, type: "break", startTime: "15:10", endTime: "15:20", topic: "휴식", speaker: "", note: "" },
+        { id: 107, type: "lecture", startTime: "15:20", endTime: "17:00", topic: "종합 실습 및 질의응답", speaker: "", note: "" }
+      ];
+      scheduleData[2] = [
+        { id: 201, type: "lecture", startTime: "09:00", endTime: "10:40", topic: "고급 AI 모델링 기법", speaker: "", note: "" },
+        { id: 202, type: "break", startTime: "10:40", endTime: "10:50", topic: "휴식", speaker: "", note: "" },
+        { id: 203, type: "lecture", startTime: "10:50", endTime: "12:30", topic: "시뮬레이션 자동화 워크플로", speaker: "", note: "" },
+        { id: 204, type: "lunch", startTime: "12:30", endTime: "13:30", topic: "점심", speaker: "", note: "" },
+        { id: 205, type: "lecture", startTime: "13:30", endTime: "15:10", topic: "프로젝트 적용 전략", speaker: "", note: "" },
+        { id: 206, type: "break", startTime: "15:10", endTime: "15:20", topic: "휴식", speaker: "", note: "" },
+        { id: 207, type: "lecture", startTime: "15:20", endTime: "17:00", topic: "성과 공유 및 토론", speaker: "", note: "" }
+      ];
+      selectDay(currentDay);
+      showToast("기본 일정표를 불러왔습니다.");
+    }
+
+    function renderEditor() {
+      const container = document.getElementById("schedule-editor");
+      const list = scheduleData[currentDay];
+      if (!list.length) {
+        container.innerHTML = `<div class="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-400">등록된 일정이 없습니다. 기본 일정 또는 항목 추가 버튼을 사용하세요.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map((item, index) => {
+        const badge = item.type === "lecture"
+          ? "bg-indigo-100 text-indigo-800"
+          : item.type === "break"
+            ? "bg-amber-100 text-amber-800"
+            : "bg-teal-100 text-teal-800";
+        const label = item.type === "lecture" ? "강의" : item.type === "break" ? "휴식" : "점심";
+        return `
+          <article class="break-avoid rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+              <span class="rounded px-2 py-1 text-xs font-extrabold ${badge}">${label}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="moveItem(${index}, -1)" class="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-600">위</button>
+                <button type="button" onclick="moveItem(${index}, 1)" class="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-600">아래</button>
+                <button type="button" onclick="removeItem(${index})" class="rounded bg-rose-600 px-2 py-1 text-xs font-bold text-white">삭제</button>
+              </div>
+            </div>
+            <div class="mt-3 grid gap-2">
+              <div class="grid grid-cols-2 gap-2">
+                <label class="text-xs font-bold text-slate-600">시작
+                  <input type="time" value="${item.startTime}" onchange="updateItem(${index}, 'startTime', this.value)" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5">
+                </label>
+                <label class="text-xs font-bold text-slate-600">종료
+                  <input type="time" value="${item.endTime}" onchange="updateItem(${index}, 'endTime', this.value)" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5">
+                </label>
+              </div>
+              <label class="text-xs font-bold text-slate-600">교육 내용
+                <textarea rows="2" oninput="updateItem(${index}, 'topic', this.value)" class="mt-1 w-full resize-y rounded border border-slate-300 px-2 py-1.5" placeholder="교육 내용을 입력하세요">${escapeHtml(item.topic)}</textarea>
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="text-xs font-bold text-slate-600">강사
+                  <input type="text" value="${escapeHtml(item.speaker)}" oninput="updateItem(${index}, 'speaker', this.value)" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5" placeholder="강사명">
+                </label>
+                <label class="text-xs font-bold text-slate-600">비고
+                  <input type="text" value="${escapeHtml(item.note)}" oninput="updateItem(${index}, 'note', this.value)" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5" placeholder="실습/준비물 등">
+                </label>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderPreview() {
+      const list = scheduleData[currentDay];
+      document.getElementById("preview-day").innerText = `DAY ${currentDay} PROGRAM`;
+      document.getElementById("preview-title").innerText = eventTitle;
+      document.getElementById("preview-time-range").innerText = list.length ? `${list[0].startTime} ~ ${list[list.length - 1].endTime}` : "09:00 ~ 17:00";
+
+      const tbody = document.getElementById("preview-body");
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="border border-slate-200 px-4 py-10 text-center text-slate-400">표시할 일정이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((item, index) => {
+        const isRest = item.type !== "lecture";
+        const rowClass = isRest ? "bg-slate-100 text-slate-600" : index % 2 ? "bg-slate-50" : "bg-white";
+        const topicClass = isRest ? "font-extrabold text-slate-700" : "font-semibold text-slate-950";
+        return `
+          <tr class="${rowClass}">
+            <td class="border border-slate-200 px-3 py-3 text-center font-extrabold text-slate-800">${escapeHtml(item.startTime)} ~ ${escapeHtml(item.endTime)}</td>
+            <td class="border border-slate-200 px-4 py-3 ${topicClass}">${escapeHtml(item.topic || (isRest ? "휴식" : "교육 내용 미정"))}</td>
+            <td class="border border-slate-200 px-3 py-3 text-center text-slate-700">${escapeHtml(item.speaker || "-")}</td>
+            <td class="border border-slate-200 px-3 py-3 text-center text-slate-600">${escapeHtml(item.note || "-")}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function copyScheduleText() {
+      const lines = [`[${eventTitle} - ${currentDay}일차 일정표]`];
+      scheduleData[currentDay].forEach((item) => {
+        lines.push(`${item.startTime}~${item.endTime} | ${item.topic || "교육 내용 미정"} | ${item.speaker || "-"} | ${item.note || "-"}`);
+      });
+      const textarea = document.createElement("textarea");
+      textarea.value = lines.join("\n");
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      showToast("일정표 텍스트를 복사했습니다.");
+    }
+
+    async function exportPdf() {
+      if (!window.html2canvas || !window.jspdf?.jsPDF) {
+        printPdfFallback();
+        return;
+      }
+
+      const originalScrollY = window.scrollY;
+      const target = document.getElementById("export-area");
+      const fileDate = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+
+      try {
+        showToast("PDF를 생성하는 중입니다.");
+        document.body.classList.add("pdf-exporting");
+        window.scrollTo(0, 0);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+
+        const canvas = await html2canvas(target, {
+          backgroundColor: "#ffffff",
+          scale: Math.min(2, window.devicePixelRatio || 1.5),
+          useCORS: true
+        });
+        const pdf = new jspdf.jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 8;
+        const imageWidth = pageWidth - margin * 2;
+        const imageHeight = canvas.height * imageWidth / canvas.width;
+        const contentHeight = pageHeight - margin * 2;
+        const imageData = canvas.toDataURL("image/png");
+
+        let remaining = imageHeight;
+        let top = margin;
+        pdf.addImage(imageData, "PNG", margin, top, imageWidth, imageHeight, undefined, "FAST");
+        remaining -= contentHeight;
+        while (remaining > 0) {
+          pdf.addPage();
+          top -= contentHeight;
+          pdf.addImage(imageData, "PNG", margin, top, imageWidth, imageHeight, undefined, "FAST");
+          remaining -= contentHeight;
+        }
+        pdf.save(`ai-meeting-schedule-day${currentDay}-${fileDate}.pdf`);
+        showToast("PDF 저장을 시작했습니다.");
+      } catch (error) {
+        console.error(error);
+        printPdfFallback();
+      } finally {
+        document.body.classList.remove("pdf-exporting");
+        window.scrollTo(0, originalScrollY);
+      }
+    }
+
+    function printPdfFallback() {
+      showToast("인쇄 창에서 PDF로 저장을 선택하세요.");
+      document.body.classList.add("pdf-exporting");
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => document.body.classList.remove("pdf-exporting"), 800);
+      }, 100);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-message").innerText = message;
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 2500);
+    }
+
+    window.addEventListener("load", () => {
+      loadTemplate();
+    });
+  </script>
+</body>
+</html>

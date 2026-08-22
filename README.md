@@ -10,6 +10,11 @@ GitHub Pages와 Notion Embed에 바로 사용할 수 있는 정적 HTML 계산�
 4. Branch를 `main` / root로 지정합니다.
 5. 발급된 `https://사용자명.github.io/저장소명/` 주소를 Notion에서 `/embed`로 넣습니다.
 
+## 페이지 URL
+
+- 비용 시뮬레이터: `https://hbpark999.github.io/ai-meeting-finance/`
+- 행사 일정표: `https://hbpark999.github.io/ai-meeting-finance/schedule.html`
+
 ## Notion 연결
 
 Notion 페이지에서 `/embed`를 입력한 뒤 GitHub Pages URL을 붙여 넣으면 계산기가 페이지 안에 표시됩니다.
