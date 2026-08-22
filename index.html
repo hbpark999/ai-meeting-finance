@@ -9,6 +9,8 @@
   <title>전자파 AI 연구반 교육행사 비용 시뮬레이터</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -35,6 +37,35 @@
       background: linear-gradient(180deg, #ffffff 0%, #f8fafc 46%, #e0f2fe 50%, #f8fafc 54%, #ffffff 100%);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(15,23,42,.08);
     }
+    .pdf-exporting .no-pdf {
+      display: none !important;
+    }
+    .pdf-exporting header {
+      position: static !important;
+    }
+    @media print {
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+      body {
+        background: #ffffff !important;
+      }
+      header {
+        position: static !important;
+      }
+      .no-pdf {
+        display: none !important;
+      }
+      main {
+        max-width: none !important;
+        padding: 12px !important;
+      }
+      article {
+        break-inside: avoid;
+        box-shadow: none !important;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800">
@@ -44,11 +75,12 @@
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200">EMC Society AI Study Group</p>
         <h1 class="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">전자파학회 전자파 AI 연구반 교육행사 비용 시뮬레이터</h1>
         <p class="mt-1 text-sm text-indigo-100">참가비, 인원, 식비를 빠르게 선택하거나 직접 입력해 예산을 계산합니다.</p>
-        <p class="mt-2 inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-indigo-100">UI v3 · 인원 슬롯 선택 · 2026-08-22</p>
+        <p class="mt-2 inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-indigo-100">UI v6 · 슬롯 선택 + PDF 저장 · 2026-08-22</p>
       </div>
-      <div class="flex gap-2">
+      <div class="no-pdf flex gap-2">
         <button type="button" onclick="resetAllInputs()" class="rounded-md bg-indigo-800 px-3 py-2 text-xs font-semibold text-indigo-50 transition hover:bg-indigo-700">초기화</button>
         <button type="button" onclick="copySummaryToClipboard()" class="rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500">요약 복사</button>
+        <button type="button" onclick="exportPdf()" class="rounded-md bg-white px-3 py-2 text-xs font-extrabold text-indigo-900 transition hover:bg-indigo-100">PDF 저장</button>
       </div>
     </div>
   </header>
@@ -499,6 +531,73 @@
       document.execCommand("copy");
       document.body.removeChild(textarea);
       showToast("요약을 클립보드에 복사했습니다.");
+    }
+
+    async function exportPdf() {
+      if (!window.html2canvas || !window.jspdf?.jsPDF) {
+        printPdfFallback();
+        return;
+      }
+
+      const originalScrollY = window.scrollY;
+      const exportTarget = document.body;
+      const fileDate = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+
+      try {
+        showToast("PDF를 생성하는 중입니다.");
+        document.body.classList.add("pdf-exporting");
+        window.scrollTo(0, 0);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+
+        const canvas = await html2canvas(exportTarget, {
+          backgroundColor: "#f8fafc",
+          scale: Math.min(2, window.devicePixelRatio || 1.5),
+          useCORS: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: document.documentElement.scrollWidth,
+          windowHeight: document.documentElement.scrollHeight
+        });
+
+        const pdf = new jspdf.jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 8;
+        const imageWidth = pageWidth - margin * 2;
+        const imageHeight = canvas.height * imageWidth / canvas.width;
+        const pageContentHeight = pageHeight - margin * 2;
+        const imageData = canvas.toDataURL("image/png");
+
+        let remainingHeight = imageHeight;
+        let imageTop = margin;
+        pdf.addImage(imageData, "PNG", margin, imageTop, imageWidth, imageHeight, undefined, "FAST");
+        remainingHeight -= pageContentHeight;
+
+        while (remainingHeight > 0) {
+          pdf.addPage();
+          imageTop -= pageContentHeight;
+          pdf.addImage(imageData, "PNG", margin, imageTop, imageWidth, imageHeight, undefined, "FAST");
+          remainingHeight -= pageContentHeight;
+        }
+
+        pdf.save(`ai-meeting-finance-${fileDate}.pdf`);
+        showToast("PDF 저장을 시작했습니다.");
+      } catch (error) {
+        console.error(error);
+        showToast("PDF 생성 중 오류가 발생했습니다.");
+      } finally {
+        document.body.classList.remove("pdf-exporting");
+        window.scrollTo(0, originalScrollY);
+      }
+    }
+
+    function printPdfFallback() {
+      showToast("인쇄 창에서 PDF로 저장을 선택하세요.");
+      document.body.classList.add("pdf-exporting");
+      window.setTimeout(() => {
+        window.print();
+        window.setTimeout(() => document.body.classList.remove("pdf-exporting"), 800);
+      }, 100);
     }
 
     function showToast(message) {
