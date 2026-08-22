@@ -28,6 +28,10 @@
       color: #1d4ed8;
       font-weight: 800;
     }
+    .count-reel {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 46%, #e0f2fe 50%, #f8fafc 54%, #ffffff 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(15,23,42,.08);
+    }
   </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800">
@@ -177,6 +181,30 @@
       `;
     }
 
+    function countRow(label, inputId, value) {
+      return `
+        <div class="grid gap-2 border-b border-slate-100 py-2.5 last:border-b-0 sm:grid-cols-[118px_1fr] sm:items-center">
+          <label for="${inputId}" class="text-sm font-bold text-slate-700">${label}</label>
+          <div class="grid gap-2 lg:grid-cols-[220px_132px] lg:items-center">
+            <div class="flex h-11 items-center overflow-hidden rounded-lg border border-slate-300 bg-white">
+              <button type="button" aria-label="${label} 줄이기" onclick="spinCount('${inputId}', -1)"
+                class="h-full w-11 border-r border-slate-200 text-lg font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-blue-700">‹</button>
+              <div class="count-reel flex h-full flex-1 items-center justify-center">
+                <span id="${inputId}-reel" data-count-reel="${inputId}" class="tabular-nums text-xl font-extrabold text-blue-700">${value}명</span>
+              </div>
+              <button type="button" aria-label="${label} 늘리기" onclick="spinCount('${inputId}', 1)"
+                class="h-full w-11 border-l border-slate-200 text-lg font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-blue-700">›</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <input id="${inputId}" type="number" min="0" step="1" value="${value}" oninput="calculate()"
+                class="w-full rounded-md border border-slate-300 px-3 py-2 text-right text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <span class="min-w-fit text-xs font-semibold text-slate-500">명</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function inputRow(label, inputId, value, step, presets, formatter, hint = "") {
       return `
         <div class="grid gap-2 border-b border-slate-100 py-2.5 last:border-b-0 sm:grid-cols-[118px_1fr] sm:items-center">
@@ -219,9 +247,9 @@
             <section>
               <h3 class="mb-2 text-sm font-extrabold text-slate-800">참가 인원 및 등록비</h3>
               <div class="rounded-lg border border-slate-200 bg-slate-50 px-4">
-                ${inputRow("학생 인원", `d${day}-student-count`, data.studentCount, 1, countPresets, (v) => `${v}명`, "명")}
+                ${countRow("학생 인원", `d${day}-student-count`, data.studentCount)}
                 ${inputRow("학생 등록비", `d${day}-student-fee`, data.studentFee, 10000, feePresets, manwon, "원")}
-                ${inputRow("일반 인원", `d${day}-general-count`, data.generalCount, 1, countPresets, (v) => `${v}명`, "명")}
+                ${countRow("일반 인원", `d${day}-general-count`, data.generalCount)}
                 ${inputRow("일반 등록비", `d${day}-general-fee`, data.generalFee, 10000, feePresets, manwon, "원")}
               </div>
               <p class="mt-2 text-right text-sm font-extrabold text-slate-700">${day}일차 매출: <span id="d${day}-rev-display" class="text-blue-600">0</span> 원</p>
@@ -277,10 +305,32 @@
       calculate();
     }
 
+    function spinCount(inputId, direction) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const current = Number(input.value) || 0;
+      let index = countPresets.findIndex((value) => value === current);
+      if (index === -1) {
+        index = direction > 0
+          ? countPresets.findIndex((value) => value > current)
+          : countPresets.map((value, candidateIndex) => ({ value, candidateIndex })).reverse().find((item) => item.value < current)?.candidateIndex;
+        if (index === -1 || index == null) index = direction > 0 ? countPresets.length - 1 : 0;
+      } else {
+        index += direction;
+      }
+      index = Math.max(0, Math.min(countPresets.length - 1, index));
+      input.value = countPresets[index];
+      calculate();
+    }
+
     function updatePresetState() {
       document.querySelectorAll(".quick-btn").forEach((button) => {
         const input = document.getElementById(button.dataset.target);
         button.classList.toggle("active", input && Number(input.value) === Number(button.dataset.value));
+      });
+      document.querySelectorAll("[data-count-reel]").forEach((reel) => {
+        const input = document.getElementById(reel.dataset.countReel);
+        reel.innerText = `${formatNumber(input ? Number(input.value) || 0 : 0)}명`;
       });
     }
 
