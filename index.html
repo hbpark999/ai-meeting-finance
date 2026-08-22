@@ -161,6 +161,10 @@
       return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 }).format(num / 10000)}만원`;
     }
 
+    function formatPreset(value, formatter) {
+      return formatter === "money" ? manwon(value) : `${formatNumber(value)}명`;
+    }
+
     function getVal(id) {
       const el = document.getElementById(id);
       const value = Number.parseFloat(el ? el.value : 0);
@@ -185,28 +189,36 @@
       `;
     }
 
-    function countRow(label, inputId, value) {
+    function spinnerRow(label, inputId, value, presets, formatter, unit, step, reelClass = "text-blue-700") {
       return `
         <div class="grid gap-2 border-b border-slate-100 py-2.5 last:border-b-0 sm:grid-cols-[118px_1fr] sm:items-center">
           <label for="${inputId}" class="text-sm font-bold text-slate-700">${label}</label>
           <div class="grid gap-2 lg:grid-cols-[220px_132px] lg:items-center">
             <div class="flex h-11 items-center overflow-hidden rounded-lg border border-slate-300 bg-white">
-              <button type="button" aria-label="${label} 줄이기" onclick="spinCount('${inputId}', -1)"
+              <button type="button" aria-label="${label} 줄이기" onclick="spinPreset('${inputId}', -1)"
                 class="h-full w-11 border-r border-slate-200 text-lg font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-blue-700">‹</button>
               <div class="count-reel flex h-full flex-1 items-center justify-center">
-                <span id="${inputId}-reel" data-count-reel="${inputId}" class="tabular-nums text-xl font-extrabold text-blue-700">${value}명</span>
+                <span id="${inputId}-reel" data-spinner-reel="${inputId}" data-presets="${presets.join(",")}" data-formatter="${formatter}" class="tabular-nums text-xl font-extrabold ${reelClass}">${formatPreset(value, formatter)}</span>
               </div>
-              <button type="button" aria-label="${label} 늘리기" onclick="spinCount('${inputId}', 1)"
+              <button type="button" aria-label="${label} 늘리기" onclick="spinPreset('${inputId}', 1)"
                 class="h-full w-11 border-l border-slate-200 text-lg font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-blue-700">›</button>
             </div>
             <div class="flex items-center gap-2">
-              <input id="${inputId}" type="number" min="0" step="1" value="${value}" oninput="calculate()"
+              <input id="${inputId}" type="number" min="0" step="${step}" value="${value}" oninput="calculate()"
                 class="w-full rounded-md border border-slate-300 px-3 py-2 text-right text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
-              <span class="min-w-fit text-xs font-semibold text-slate-500">명</span>
+              <span class="min-w-fit text-xs font-semibold text-slate-500">${unit}</span>
             </div>
           </div>
         </div>
       `;
+    }
+
+    function countRow(label, inputId, value) {
+      return spinnerRow(label, inputId, value, countPresets, "count", "명", 1, "text-blue-700");
+    }
+
+    function feeRow(label, inputId, value) {
+      return spinnerRow(label, inputId, value, feePresets, "money", "원", 10000, "text-indigo-700");
     }
 
     function inputRow(label, inputId, value, step, presets, formatter, hint = "") {
@@ -252,9 +264,9 @@
               <h3 class="mb-2 text-sm font-extrabold text-slate-800">참가 인원 및 등록비</h3>
               <div class="rounded-lg border border-slate-200 bg-slate-50 px-4">
                 ${countRow("학생 인원", `d${day}-student-count`, data.studentCount)}
-                ${inputRow("학생 등록비", `d${day}-student-fee`, data.studentFee, 10000, feePresets, manwon, "원")}
+                ${feeRow("학생 등록비", `d${day}-student-fee`, data.studentFee)}
                 ${countRow("일반 인원", `d${day}-general-count`, data.generalCount)}
-                ${inputRow("일반 등록비", `d${day}-general-fee`, data.generalFee, 10000, feePresets, manwon, "원")}
+                ${feeRow("일반 등록비", `d${day}-general-fee`, data.generalFee)}
               </div>
               <p class="mt-2 text-right text-sm font-extrabold text-slate-700">${day}일차 매출: <span id="d${day}-rev-display" class="text-blue-600">0</span> 원</p>
             </section>
@@ -309,21 +321,23 @@
       calculate();
     }
 
-    function spinCount(inputId, direction) {
+    function spinPreset(inputId, direction) {
       const input = document.getElementById(inputId);
       if (!input) return;
+      const reel = document.querySelector(`[data-spinner-reel="${inputId}"]`);
+      const presets = reel?.dataset.presets ? reel.dataset.presets.split(",").map(Number) : countPresets;
       const current = Number(input.value) || 0;
-      let index = countPresets.findIndex((value) => value === current);
+      let index = presets.findIndex((value) => value === current);
       if (index === -1) {
         index = direction > 0
-          ? countPresets.findIndex((value) => value > current)
-          : countPresets.map((value, candidateIndex) => ({ value, candidateIndex })).reverse().find((item) => item.value < current)?.candidateIndex;
-        if (index === -1 || index == null) index = direction > 0 ? countPresets.length - 1 : 0;
+          ? presets.findIndex((value) => value > current)
+          : presets.map((value, candidateIndex) => ({ value, candidateIndex })).reverse().find((item) => item.value < current)?.candidateIndex;
+        if (index === -1 || index == null) index = direction > 0 ? presets.length - 1 : 0;
       } else {
         index += direction;
       }
-      index = Math.max(0, Math.min(countPresets.length - 1, index));
-      input.value = countPresets[index];
+      index = Math.max(0, Math.min(presets.length - 1, index));
+      input.value = presets[index];
       calculate();
     }
 
@@ -332,9 +346,9 @@
         const input = document.getElementById(button.dataset.target);
         button.classList.toggle("active", input && Number(input.value) === Number(button.dataset.value));
       });
-      document.querySelectorAll("[data-count-reel]").forEach((reel) => {
-        const input = document.getElementById(reel.dataset.countReel);
-        reel.innerText = `${formatNumber(input ? Number(input.value) || 0 : 0)}명`;
+      document.querySelectorAll("[data-spinner-reel]").forEach((reel) => {
+        const input = document.getElementById(reel.dataset.spinnerReel);
+        reel.innerText = formatPreset(input ? Number(input.value) || 0 : 0, reel.dataset.formatter);
       });
     }
 
