@@ -35,6 +35,12 @@
       background: #ffffff;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, .16);
     }
+    .time-cell {
+      cursor: text;
+      text-align: center;
+      font-weight: 800;
+      color: #1e293b;
+    }
     .pdf-exporting .no-pdf {
       display: none !important;
     }
@@ -113,7 +119,7 @@
       <div class="mt-4 grid gap-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3 lg:grid-cols-[1fr_auto] lg:items-end">
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label class="text-xs font-bold text-slate-600">시작
-            <input id="batch-start" type="time" value="09:00" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
+            <input id="batch-start" type="text" inputmode="numeric" maxlength="5" pattern="[0-2][0-9]:[0-5][0-9]" value="09:00" placeholder="09:00" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
           </label>
           <label class="text-xs font-bold text-slate-600">강의
             <select id="batch-lecture" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
@@ -125,7 +131,7 @@
             <input id="batch-break" type="number" min="0" value="10" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-right">
           </label>
           <label class="text-xs font-bold text-slate-600">점심 시작
-            <input id="batch-lunch-start" type="time" value="12:30" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
+            <input id="batch-lunch-start" type="text" inputmode="numeric" maxlength="5" pattern="[0-2][0-9]:[0-5][0-9]" value="12:30" placeholder="12:30" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5">
           </label>
           <label class="text-xs font-bold text-slate-600">점심
             <input id="batch-lunch" type="number" min="0" value="60" class="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-right">
@@ -206,6 +212,15 @@
       return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
     }
 
+    function normalizeTime(value, fallback = "00:00") {
+      const text = String(value || "").trim();
+      const match = text.match(/^(\d{1,2})(?::?(\d{1,2}))?$/);
+      if (!match) return fallback;
+      const hour = Math.min(23, Number(match[1]) || 0);
+      const minute = Math.min(59, Number(match[2] ?? 0) || 0);
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    }
+
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
@@ -269,8 +284,14 @@
     function updateItem(index, field, value) {
       const item = scheduleData[currentDay][index];
       if (!item) return;
-      item[field] = value;
+      item[field] = field === "startTime" || field === "endTime" ? normalizeTime(value, item[field]) : value;
       refreshHeader();
+    }
+
+    function commitEditableTime(element, index, field) {
+      updateItem(index, field, element.innerText);
+      const item = scheduleData[currentDay][index];
+      if (item) element.innerText = item[field];
     }
 
     function setItemType(index, type) {
@@ -290,10 +311,14 @@
     }
 
     function applyBatchSchedule() {
-      const start = timeToMinutes(document.getElementById("batch-start").value);
+      const startInput = document.getElementById("batch-start");
+      const lunchStartInput = document.getElementById("batch-lunch-start");
+      startInput.value = normalizeTime(startInput.value, "09:00");
+      lunchStartInput.value = normalizeTime(lunchStartInput.value, "12:30");
+      const start = timeToMinutes(startInput.value);
       const lectureDuration = Number(document.getElementById("batch-lecture").value) || 100;
       const breakDuration = Number(document.getElementById("batch-break").value) || 10;
-      const lunchStart = timeToMinutes(document.getElementById("batch-lunch-start").value);
+      const lunchStart = timeToMinutes(lunchStartInput.value);
       const lunchDuration = Number(document.getElementById("batch-lunch").value) || 60;
       const items = [];
       let cursor = start;
@@ -372,10 +397,14 @@
           <tr class="${typeClass(item.type)} align-top">
             <td class="border border-slate-200 px-2 py-2">
               <div class="grid gap-1">
-                <input type="time" value="${escapeHtml(item.startTime)}" onchange="updateItem(${index}, 'startTime', this.value)"
-                  class="editable-cell text-center font-extrabold text-slate-800">
-                <input type="time" value="${escapeHtml(item.endTime)}" onchange="updateItem(${index}, 'endTime', this.value)"
-                  class="editable-cell text-center font-extrabold text-slate-800">
+                <div contenteditable="true" inputmode="numeric" role="textbox" aria-label="start time"
+                  onblur="commitEditableTime(this, ${index}, 'startTime')"
+                  onkeydown="if (event.key === 'Enter') { event.preventDefault(); this.blur(); }"
+                  class="editable-cell time-cell">${escapeHtml(item.startTime)}</div>
+                <div contenteditable="true" inputmode="numeric" role="textbox" aria-label="end time"
+                  onblur="commitEditableTime(this, ${index}, 'endTime')"
+                  onkeydown="if (event.key === 'Enter') { event.preventDefault(); this.blur(); }"
+                  class="editable-cell time-cell">${escapeHtml(item.endTime)}</div>
               </div>
             </td>
             <td class="border border-slate-200 px-2 py-2">
